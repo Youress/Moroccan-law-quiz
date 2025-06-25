@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  submissions     UserSubmission[]
+  bookmarks       Bookmark[]
+  progress        UserProgress[]
+  achievements    UserAchievement[]
+  dailyChallenges DailyChallenge[]
+
+  @@map("users")
+}
+
+model Question {
+  id          String       @id @default(uuid())
+  text        String
+  explanation String?      // تعليل الجواب
+  category    Category     @default(GENERAL)
+  difficulty  Difficulty   @default(MEDIUM)
+  examTag     String?      // e.g., "Exam2025", "Exam2021"
+  isActive    Boolean      @default(true)
+  
+  // Relations
+  answers     Answer[]
+  userAnswers UserAnswer[]
+  bookmarks   Bookmark[]
+  progress    UserProgress[]
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("questions")
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  text       String
+  isCorrect  Boolean
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
+  createdAt  DateTime @default(now())
+
+  @@map("answers")
+}
+
+model UserSubmission {
+  id             String         @id @default(uuid())
+  userId         String?        // Optional for anonymous users
+  user           User?          @relation(fields: [userId], references: [id])
+  score          Int?
+  totalQuestions Int            @default(60)
+  examTag        String?
+  category       Category?
+  difficulty     Difficulty?
+  mode           QuizMode       @default(PRACTICE)
+  timeSpent      Int?           // in seconds
+  isCompleted    Boolean        @default(false)
+  
+  // Relations
+  answers        UserAnswer[]
+  
+  createdAt      DateTime       @default(now())
+
+  @@map("user_submissions")
+}
+
+model UserAnswer {
+  id                String         @id @default(uuid())
+  question          Question       @relation(fields: [questionId], references: [id])
+  questionId        String
+  selectedAnswerIds String[]       // IDs of selected answers
+  isCorrect         Boolean        @default(false)
+  timeSpent         Int?           // seconds spent on this question
+  submission        UserSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId      String
+  createdAt         DateTime       @default(now())
+
+  @@map("user_answers")
+}
+
+model UserProgress {
+  id               String     @id @default(uuid())
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId       String
+  question         Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Spaced repetition data
+  correctCount     Int        @default(0)
+  incorrectCount   Int        @default(0)
+  lastAttempt      DateTime   @default(now())
+  nextReview       DateTime?  // For spaced repetition
+  difficulty       ReviewDifficulty @default(NORMAL)
+  
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@unique([userId, questionId])
+  @@map("user_progress")
+}
+
+model Bookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  notes      String?  // Optional user notes
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, questionId])
+  @@map("bookmarks")
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  nameAr      String   // Arabic name
+  description String
+  descriptionAr String // Arabic description
+  icon        String   // Icon name
+  condition   String   // JSON condition for unlocking
+  points      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model DailyChallenge {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime @default(now()) @db.Date
+  completed   Boolean  @default(false)
+  score       Int?
+  streak      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, date])
+  @@map("daily_challenges")
+}
+
+// Enums
+enum Category {
+  GENERAL      // عام
+  FAMILY       // أسرة
+  CIVIL        // مدني
+  CRIMINAL     // جنائي
+  COMMERCIAL   // تجاري
+  ADMINISTRATIVE // إداري
+  LABOR        // شغل
+  CONSTITUTIONAL // دستوري
+  PROCEDURE    // مسطرة
+}
+
+enum Difficulty {
+  EASY    // سهل
+  MEDIUM  // متوسط
+  HARD    // صعب
+}
+
+enum QuizMode {
+  PRACTICE    // تدريب
+  EXAM        // امتحان
+  CHALLENGE   // تحدي يومي
+  REVIEW      // مراجعة
+}
+
+enum ReviewDifficulty {
+  EASY    // سهل - إعادة بعد 4 أيام
+  NORMAL  // عادي - إعادة بعد يومين
+  HARD    // صعب - إعادة غداً
+}

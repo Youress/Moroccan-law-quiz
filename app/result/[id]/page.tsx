@@ -1,5 +1,3 @@
-"use client"
-
 import { getSubmissionById } from "@/lib/quiz"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -56,7 +54,7 @@ export default async function ResultPage({
                 الرئيسية
               </Button>
             </Link>
-            <div className="flex space-x-2 space-x-reverse">
+            {/* <div className="flex space-x-2 space-x-reverse">
               <Button variant="outline" onClick={() => window.open(`/api/export/pdf/${submission.id}`, "_blank")}>
                 <Download className="ml-2 h-4 w-4" />
                 تصدير PDF
@@ -69,7 +67,7 @@ export default async function ResultPage({
                 <Download className="ml-2 h-4 w-4" />
                 تصدير CSV
               </Button>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>

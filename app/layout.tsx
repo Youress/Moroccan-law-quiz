@@ -24,17 +24,17 @@ export default function RootLayout({
               <div className="flex justify-between items-center py-4">
                 <div className="flex items-center space-x-4 space-x-reverse">
                   <h1 className="text-2xl font-bold text-gray-900">اختبار القانون المغربي</h1>
-                  <span className="text-sm text-gray-500">Moroccan Law Quiz</span>
+                  <span className="text-sm hidden md:block text-gray-500">Moroccan Law Quiz</span>
                 </div>
                 <nav className="flex space-x-4 space-x-reverse">
-                  <a href="/" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                    الرئيسية
+                  <a href="/quiz/setup" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                    إعداد الاختبار
                   </a>
                   <a
-                    href="/quiz"
+                    href="/dashboard"
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                   >
-                    بدء الاختبار
+                    الاحصائيات
                   </a>
                   <a
                     href="/history"
